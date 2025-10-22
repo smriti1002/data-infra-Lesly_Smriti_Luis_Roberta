@@ -1,12 +1,12 @@
 {
     "filename": "image1.jpg",
     "description": "null",
-    "tags": null,
+    "tags": None,
     "width": 1920,
     "height": 1080
 }
 
-from semmeta.json_cleaner_module import JsonCleaner
+from json_cleaner_module import JsonCleaner
 
 cleaner = JsonCleaner("output/image_raw_test.json")
 cleaner.clean_json()
