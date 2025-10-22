@@ -123,31 +123,34 @@ class SEMMetaData:
 
 
 
-    def InsMetaDict(self, list):   
-
+    def InsMetaDict(self, metadata_list):   
         '''
-        write  function that converts a flat list of instrument metadata into a structured dictionary.
+        Converts a flat list of instrument metadata into a structured dictionary.
         Returns:
-            - dict: of all the information contained in the 34118 tag  
-            - and an empty dictionary if parsing fails.  
-     
+            - dict: all information contained in the 34118 tag  
+            - empty dictionary if parsing fails
         '''
         if not metadata_list or not isinstance(metadata_list, list):
             print("No valid metadata list provided.")
             return {}
 
-    meta_dict = {}
-    for item in metadata_list:
-        if "=" in item:
-            key, value = item.split("=", 1)  # divide solo alla prima '='
-            meta_dict[key.strip()] = value.strip()
-        else:
-            # nel caso la stringa non contenga '='
-            meta_dict[item.strip()] = None
-            return meta_dict
+        meta_dict = {}
+        for item in metadata_list:
+            if "=" in item:
+                key, value = item.split("=", 1)  # divide solo alla prima '='
+                meta_dict[key.strip()] = value.strip()
+            else:
+                # nel caso la stringa non contenga '='
+                meta_dict[item.strip()] = None
 
-    # Open file in write mode and Export SEM Metadata to JSON Format with json.dump
-    def WriteSEMJson(self,file, semdict):
+        return meta_dict
+
+
+    def WriteSEMJson(self, file, semdict):
+        """
+        Open file in write mode and export SEM metadata to JSON format
+        """
         with open(file, "w") as semoutfile:
-            json.dump(semdict, semoutfile)
+            json.dump(semdict, semoutfile, indent=4)  # indent per renderlo leggibile
+        print(f"SEM metadata saved to {file}")
         return
