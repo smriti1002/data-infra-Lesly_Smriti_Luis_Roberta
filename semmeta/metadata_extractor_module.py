@@ -99,25 +99,25 @@ class SEMMetaData:
             - and an empty list if tag 34118 is not found.
         '''
         
-    if not hasattr(self, "image_metadata") or not self.image_metadata:
-        print("No metadata found. Run ImageMetadata(img) first.")
-        return []
-    
-    tag_id = 34118
-    if tag_id not in self.image_metadata:
-        print(f"Tag {tag_id} not found.")
-        return []
+        if not hasattr(self, "image_metadata") or not self.image_metadata:
+            print("No metadata found. Run ImageMetadata(img) first.")
+            return []
+        
+        tag_id = 34118
+        if tag_id not in self.image_metadata:
+            print(f"Tag {tag_id} not found.")
+            return []
 
-    data = self.image_metadata[tag_id]
+        data = self.image_metadata[tag_id]
 
-    # Convert bytes to string if needed
-    if isinstance(data, bytes):
-        data = data.decode(errors="ignore")
+        # Convert bytes to string if needed
+        if isinstance(data, bytes):
+            data = data.decode(errors="ignore")
 
-    # Clean up unwanted characters and split into a list
-    cleaned = data.replace("\x00", " ").strip()
-    metadata_list = [item.strip() for item in cleaned.split(";") if item.strip()]
-    return metadata_list
+        # Clean up unwanted characters and split into a list
+        cleaned = data.replace("\x00", " ").strip()
+        metadata_list = [item.strip() for item in cleaned.split(";") if item.strip()]
+        return metadata_list
 
         
 
@@ -132,9 +132,9 @@ class SEMMetaData:
             - and an empty dictionary if parsing fails.  
      
         '''
-            if not metadata_list or not isinstance(metadata_list, list):
-        print("No valid metadata list provided.")
-        return {}
+        if not metadata_list or not isinstance(metadata_list, list):
+            print("No valid metadata list provided.")
+            return {}
 
     meta_dict = {}
     for item in metadata_list:
@@ -144,8 +144,7 @@ class SEMMetaData:
         else:
             # nel caso la stringa non contenga '='
             meta_dict[item.strip()] = None
-
-    return meta_dict
+            return meta_dict
 
     # Open file in write mode and Export SEM Metadata to JSON Format with json.dump
     def WriteSEMJson(self,file, semdict):
