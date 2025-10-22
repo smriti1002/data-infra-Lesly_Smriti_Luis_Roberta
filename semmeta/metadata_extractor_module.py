@@ -12,7 +12,7 @@ class SEMMetaData:
     def __init__(self, image_metadata={}, semext=('tif','TIF'), semInsTag=[34118]):
         #semext is a tuple corresponding to the valid extension, 34118 is a TIFF tag ofte used by SEM instruments to store extra data
         #define  the following attributes: semext, image_megadata, semInsTag, images_tags (array to store image tag values)
-
+        ...
 
 
     def OpenCheckImage(self, image):
@@ -20,6 +20,7 @@ class SEMMetaData:
         Opens an image file with PILLOW library (Image.open()) and verifies accessibility and format (.tif or .TIF)
         return the opened image object if succesful
         """
+        ...
 
 
     def ImageMetadata(self, img):
@@ -95,7 +96,7 @@ class SEMMetaData:
             - list: a cleaned and escaped list of instrument metadata strings.
             - and an empty list if tag 34118 is not found.
         '''
-
+        ...
 
     def InsMetaDict(self, list):   
 
@@ -106,7 +107,7 @@ class SEMMetaData:
             - and an empty dictionary if parsing fails.  
      
         '''
-
+        ...
     # Open file in write mode and Export SEM Metadata to JSON Format with json.dump
     def WriteSEMJson(self,file, semdict):
         with open(file, "w") as semoutfile:
