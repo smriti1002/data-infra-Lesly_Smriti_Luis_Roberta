@@ -2,24 +2,30 @@
 #write python class that read a .tif file
 import os, sys, glob
 import matplotlib.pyplot as plt
+import glob 
 import numpy as np
 from PIL import Image, ExifTags #Image processing and metadata
 import json
-
+import pathlib
 # Class Initialization
 
 class SEMMetaData:
     def __init__(self, image_metadata={}, semext=('tif','TIF'), semInsTag=[34118]):
-        #semext is a tuple corresponding to the valid extension, 34118 is a TIFF tag ofte used by SEM instruments to store extra data
-        #define  the following attributes: semext, image_megadata, semInsTag, images_tags (array to store image tag values)
+        # semext is a tuple corresponding to the valid extension
+        # 34118 is a TIFF tag often used by SEM instruments to store extra data
+        self.semext = semext
+        self.image_metadata = image_metadata
+        self.semInsTag = semInsTag
+        self.image_tags = np.array([])
 
-
-
-    def OpenCheckImage(self, image):
+    def OpenCheckImage(self,image):
         """
         Opens an image file with PILLOW library (Image.open()) and verifies accessibility and format (.tif or .TIF)
         return the opened image object if succesful
         """
+        img = Image.open(image)
+        return img
+
 
 
     def ImageMetadata(self, img):
@@ -94,21 +100,82 @@ class SEMMetaData:
         Returns:
             - list: a cleaned and escaped list of instrument metadata strings.
             - and an empty list if tag 34118 is not found.
-        '''
-
-
-    def InsMetaDict(self, list):   
 
         '''
-        write  function that converts a flat list of instrument metadata into a structured dictionary.
+        tag_id = 34118  # instrument-specific SEM metadata tag
+
+        # Check if tag 34118 exists
+        if tag_id not in self.image_metadata:
+            print(" Tag 34118 not found in this image.")
+            return []
+
+        # Extract raw metadata bytes
+        raw_data = self.image_metadata[tag_id]
+
+        # Convert to string safely (SEM metadata often stored as bytes)
+        if isinstance(raw_data, (bytes, bytearray)):
+            try:
+                text_data = raw_data.decode("utf-8", errors="replace")
+            except Exception:
+                text_data = str(raw_data)
+        else:
+            text_data = str(raw_data)
+
+        # Clean up the text
+        text_data = text_data.replace("\r", "").replace("\x00", "").strip()
+
+        # Split into lines if metadata has multiple entries
+        metadata_lines = [line.strip() for line in text_data.splitlines() if line.strip()]
+
+        return metadata_lines
+        
+
+    def InsMetaDict(self, meta_list):
+        """
+        Converts a flat list of instrument metadata (from tag 34118)
+        into a structured dictionary.
+
         Returns:
-            - dict: of all the information contained in the 34118 tag  
-            - and an empty dictionary if parsing fails.  
-     
-        '''
+            - dict: Parsed instrument metadata key-value pairs.
+            - Empty dict if parsing fails or list is invalid.
+        """
+        if not meta_list or not isinstance(meta_list, list):
+            print("Invalid or empty metadata list provided to InsMetaDict().")
+            return {}
+
+        meta_dict = {}
+
+        try:
+            for item in meta_list:
+                # Clean line: remove nulls, extra spaces, etc.
+                clean_line = item.strip().replace("\x00", "")
+                if not clean_line:
+                    continue
+
+                # Try splitting on common separators
+                if "=" in clean_line:
+                    key, value = clean_line.split("=", 1)
+                elif ":" in clean_line:
+                    key, value = clean_line.split(":", 1)
+                else:
+                    # If no separator, skip or store as 'Unknown_n'
+                    key, value = f"Unknown_{len(meta_dict)+1}", clean_line
+
+                # Clean key and value strings
+                key = key.strip().strip(";")
+                value = value.strip().strip(";")
+
+                meta_dict[key] = value
+
+        except Exception as e:
+            print(f"Error parsing instrument metadata: {e}")
+            return {}
+
+        return meta_dict
+
 
     # Open file in write mode and Export SEM Metadata to JSON Format with json.dump
-    def WriteSEMJson(self,file, semdict):
-        with open(file, "w") as semoutfile:
-            json.dump(semdict, semoutfile)
-        return
+   # def WriteSEMJson(self,file, semdict):
+    #    with open(file, "w") as semoutfile:
+    #        json.dump(semdict, semoutfile)
+    #      return
