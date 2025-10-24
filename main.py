@@ -22,12 +22,20 @@ def main():
     img = SEM_metadata.OpenCheckImage(image_file)
     SEM_metadata.ImageMetadata(img)
 
-    # Extract SEM instrument metadata
+    # Extract standard EXIF metadata
+    exif_keys, exif_number = SEM_metadata.SEMEXIF()
+    found_exif_metadata, none_exif_metadata = SEM_metadata.GetExifMetadata(img, exif_keys, exif_number)
+    exif_dict = SEM_metadata.ExifMetaDict(found_exif_metadata, none_exif_metadata)
+
+    # Extract SEM instrument metadata (from tag 34118)
     metadata_list = SEM_metadata.GetInsMetadata()
-    metadata_dict = SEM_metadata.InsMetaDict(metadata_list)
+    sem_inst_dict = SEM_metadata.InsMetaDict(metadata_list)
+
+    # Combine both dictionaries (EXIF + SEM instrument metadata)
+    complete_metadata_dict = {**exif_dict, **sem_inst_dict}
 
     # Save to JSON
-    SEM_metadata.WriteSEMJson(output_file, metadata_dict)
+    SEM_metadata.WriteSEMJson(output_file, complete_metadata_dict)
     print(f"Metadata saved to {output_file}")
 
     # --- Clean the JSON file ---

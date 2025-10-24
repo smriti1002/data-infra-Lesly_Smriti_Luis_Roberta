@@ -1,11 +1,6 @@
 #write python class that read a .tif file
-import os, sys, glob
-import matplotlib.pyplot as plt
-import numpy as np
 from PIL import Image, ExifTags #Image processing and metadata
-import pathlib
 import json
-import glob
 
 # Class Initialization
 
@@ -34,7 +29,8 @@ class SEMMetaData:
         """
 
         self.image_metadata = img.tag
-        self.image_tags = np.array(self.image_metadata)
+        # Store tags as a list for membership testing
+        self.image_tags = list(self.image_metadata.keys())
         return self.image_metadata, self.image_tags
 
 
@@ -119,25 +115,22 @@ class SEMMetaData:
         if isinstance(data, bytes):
             data = data.decode(errors="ignore")
 
-        # If it's a numpy array or other object with tobytes, try to decode that
-        try:
-            import numpy as _np
-            if isinstance(data, _np.ndarray):
-                try:
-                    data = data.tobytes().decode(errors="ignore")
-                except Exception:
-                    data = str(data)
-        except Exception:
-            # numpy might not be available or conversion failed; fallback below
-            pass
+        # If it's an object with tobytes method, try to decode that
+        if hasattr(data, 'tobytes') and not isinstance(data, (str, bytes)):
+            try:
+                data = data.tobytes().decode(errors="ignore")
+            except Exception:
+                data = str(data)
 
         # As a final fallback, ensure we have a string
         if not isinstance(data, str):
             data = str(data)
 
         # Clean up unwanted characters and split into a list
+        # Replace null bytes with spaces, then split by line breaks
         cleaned = data.replace("\x00", " ").strip()
-        metadata_list = [item.strip() for item in cleaned.split(";") if item.strip()]
+        # Split by both \r\n and \n to handle different line ending formats
+        metadata_list = [item.strip() for item in cleaned.replace("\r\n", "\n").split("\n") if item.strip()]
         return metadata_list
 
         
@@ -147,6 +140,7 @@ class SEMMetaData:
     def InsMetaDict(self, metadata_list):   
         '''
         Converts a flat list of instrument metadata into a structured dictionary.
+        The metadata comes in pairs: tag identifier followed by "key = value" string.
         Returns:
             - dict: all information contained in the 34118 tag  
             - empty dictionary if parsing fails
@@ -156,13 +150,23 @@ class SEMMetaData:
             return {}
 
         meta_dict = {}
-        for item in metadata_list:
-            if "=" in item:
-                key, value = item.split("=", 1)  # divide solo alla prima '='
-                meta_dict[key.strip()] = value.strip()
+        i = 0
+        while i < len(metadata_list):
+            current_line = metadata_list[i]
+            
+            # Check if this is a tag identifier (doesn't contain "=")
+            if "=" not in current_line and i + 1 < len(metadata_list):
+                # This is a tag identifier, next line should be the value
+                tag_identifier = current_line.strip()
+                value = metadata_list[i + 1].strip()
+                meta_dict[tag_identifier] = value
+                i += 2  # Skip both lines
             else:
-                # nel caso la stringa non contenga '='
-                meta_dict[item.strip()] = None
+                # Standalone line with "=" or last line without pair
+                if "=" in current_line:
+                    key, value = current_line.split("=", 1)
+                    meta_dict[key.strip()] = value.strip()
+                i += 1
 
         return meta_dict
 
