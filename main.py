@@ -36,12 +36,11 @@ def main():
     
     # Clean the json file
     # !Smirti
-    # todo: use the class correctly
     # the steps below assumes that the JsonCleaner creates directly the cleaned json file in the output folder
-    json_cleaner = JsonCleaner()
-    json_cleaner.clean_json(output_file)
-    output_file = output_file.replace('raw', 'cleaned')
-    # ...
+    json_cleaner = JsonCleaner(output_file)
+    json_cleaner.clean_json()
+    output_file = output_file.replace('_raw.json', '_cleaned.json')
+
     
     # Visualize the features
     # !Luis

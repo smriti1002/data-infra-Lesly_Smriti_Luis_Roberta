@@ -1,9 +1,7 @@
 # Ignore virtual environment folders
-venv/
 myenv/
-env/
 .myenv/
-.venv/
+
 
 
 # Ignore Python cache files
