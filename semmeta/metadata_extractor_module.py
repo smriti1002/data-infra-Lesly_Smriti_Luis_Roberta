@@ -110,9 +110,30 @@ class SEMMetaData:
 
         data = self.image_metadata[tag_id]
 
-        # Convert bytes to string if needed
+        # Some PIL tags can be returned as tuples/lists (e.g., (b"...",)) or arrays.
+        # Normalize to a single value first.
+        if isinstance(data, (tuple, list)) and len(data) > 0:
+            data = data[0]
+
+        # If it's a bytes-like object, decode to string
         if isinstance(data, bytes):
             data = data.decode(errors="ignore")
+
+        # If it's a numpy array or other object with tobytes, try to decode that
+        try:
+            import numpy as _np
+            if isinstance(data, _np.ndarray):
+                try:
+                    data = data.tobytes().decode(errors="ignore")
+                except Exception:
+                    data = str(data)
+        except Exception:
+            # numpy might not be available or conversion failed; fallback below
+            pass
+
+        # As a final fallback, ensure we have a string
+        if not isinstance(data, str):
+            data = str(data)
 
         # Clean up unwanted characters and split into a list
         cleaned = data.replace("\x00", " ").strip()
