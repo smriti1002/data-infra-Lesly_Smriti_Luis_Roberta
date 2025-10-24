@@ -37,7 +37,6 @@ def _parse_value_unit(value_string):
         return match.group(1), match.group(2)  # (numeric_value, unit)
     return value_string, ""  # Return original if no match
 
-
 def _print_image_metadata(image_metadata):
     """Print the image metadata in a table format"""
     
