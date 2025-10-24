@@ -175,7 +175,7 @@ class SEMMetaData:
 
 
     # Open file in write mode and Export SEM Metadata to JSON Format with json.dump
-   # def WriteSEMJson(self,file, semdict):
-    #    with open(file, "w") as semoutfile:
-    #        json.dump(semdict, semoutfile)
-    #      return
+    def WriteSEMJson(self,file, semdict):
+        with open(file, "w") as semoutfile:
+            json.dump(semdict, semoutfile)
+            return

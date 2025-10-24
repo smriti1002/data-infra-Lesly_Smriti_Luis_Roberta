@@ -5,17 +5,17 @@ def main():
     # Create object
     sem_reader = SEMMetaData()
     # Example image
-    image_path = "/home/ubuntu/data-infra-Lesly_Smriti_Luis_Roberta/imgs/LIL test_defect02.tif"
+    image_path = "/home/ubuntu/data-infra-Lesly_Smriti_Luis_Roberta/imgs/12_50_vero_09.tif"
     # Open the image
     img = sem_reader.OpenCheckImage(image_path)
-    print("Image opened successfully.")
+   # print("Image opened successfully.")
 
     # Extract metadata
     image_metadata, tags = sem_reader.ImageMetadata(img)
     #print("Extracted metadata tags:", tags)
-    print("Extracted metadata tags:", image_metadata)
+   # print("Extracted metadata tags:", image_metadata)
   
-    # === 6️⃣ Extract EXIF tag mappings and metadata ===
+    # === 6️⃣ Extract EXIF tag mappings and metadata ===cd 
     exif_keys, exif_numbers = sem_reader.SEMEXIF()
     found_exif, missing_exif = sem_reader.GetExifMetadata(img, exif_keys, exif_numbers)
     exif_dict = sem_reader.ExifMetaDict(found_exif, missing_exif)
@@ -30,17 +30,23 @@ def main():
         "EXIF_Metadata": exif_dict,
         "Instrument_Metadata": ins_metadata_dict,
     }
+    print("Combined Metadata:", combined_metadata)  
+
+    sem_reader.WriteSEMJson("./output/12_50_vero_09_raw.json", combined_metadata)
+
 
     # === 9 Print summary to console ===
-    print("\n🔬 Extracted Instrument Metadata:")
-    for k, v in ins_metadata_dict.items():
-        print(f"  {k}: {v}")
+
+    #
+    # print("\n Extracted Instrument Metadata:")
+    #for k, v in ins_metadata_dict.items():
+     #   print(f"  {k}: {v}")
 
     # === 10 Write combined metadata to JSON ===
-    output_json = os.path.splitext(image_path)[0] + "_metadata.json"
-    with open(output_json, "w") as f:
-        json.dump(combined_metadata, f, indent=4)
-    print(f"\n Metadata successfully saved to: {output_json}")
+   # output_json = os.path.splitext(image_path)[0] + "_metadata.json"
+   # with open(output_json, "w") as f:
+    #    json.dump(combined_metadata, f, indent=4)
+   # print(f"\n Metadata successfully saved to: {output_json}")
 
 if __name__ == "__main__":
     main()
