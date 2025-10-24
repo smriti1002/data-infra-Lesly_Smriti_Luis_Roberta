@@ -1,27 +1,30 @@
 #write python class that read a .tif file
-#write python class that read a .tif file
 import os, sys, glob
 import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image, ExifTags #Image processing and metadata
+import pathlib
 import json
+import glob
 
 # Class Initialization
 
 class SEMMetaData:
     def __init__(self, image_metadata={}, semext=('tif','TIF'), semInsTag=[34118]):
-        #semext is a tuple corresponding to the valid extension, 34118 is a TIFF tag ofte used by SEM instruments to store extra data
+        #semext is a tuple corresponding to the valid extension, 34118 is a TIFF tag often used by SEM instruments to store extra data
         #define  the following attributes: semext, image_megadata, semInsTag, images_tags (array to store image tag values)
-        ...
-
+        self.semext = semext 
+        self.image_metadata = image_metadata
+        self.semInsTag = semInsTag 
 
     def OpenCheckImage(self, image):
         """
         Opens an image file with PILLOW library (Image.open()) and verifies accessibility and format (.tif or .TIF)
         return the opened image object if succesful
         """
-        ...
-
+        img=Image.open(image)
+        return img
+        
 
     def ImageMetadata(self, img):
         """
@@ -44,7 +47,6 @@ class SEMMetaData:
             - exif_keys (list): Human-readable EXIF tag names
             - exif_number (list): Corresponding numeric tag identifiers used in image metadata.
         """
-
         # Get the PIL EXIF tag dictionary to map names to numeric keys
         exif_dict = {k: v for v, k in ExifTags.TAGS.items()}
         # or
@@ -96,20 +98,80 @@ class SEMMetaData:
             - list: a cleaned and escaped list of instrument metadata strings.
             - and an empty list if tag 34118 is not found.
         '''
-        ...
+        
+        if not hasattr(self, "image_metadata") or not self.image_metadata:
+            print("No metadata found. Run ImageMetadata(img) first.")
+            return []
+        
+        tag_id = 34118
+        if tag_id not in self.image_metadata:
+            print(f"Tag {tag_id} not found.")
+            return []
 
-    def InsMetaDict(self, list):   
+        data = self.image_metadata[tag_id]
 
+        # Some PIL tags can be returned as tuples/lists (e.g., (b"...",)) or arrays.
+        # Normalize to a single value first.
+        if isinstance(data, (tuple, list)) and len(data) > 0:
+            data = data[0]
+
+        # If it's a bytes-like object, decode to string
+        if isinstance(data, bytes):
+            data = data.decode(errors="ignore")
+
+        # If it's a numpy array or other object with tobytes, try to decode that
+        try:
+            import numpy as _np
+            if isinstance(data, _np.ndarray):
+                try:
+                    data = data.tobytes().decode(errors="ignore")
+                except Exception:
+                    data = str(data)
+        except Exception:
+            # numpy might not be available or conversion failed; fallback below
+            pass
+
+        # As a final fallback, ensure we have a string
+        if not isinstance(data, str):
+            data = str(data)
+
+        # Clean up unwanted characters and split into a list
+        cleaned = data.replace("\x00", " ").strip()
+        metadata_list = [item.strip() for item in cleaned.split(";") if item.strip()]
+        return metadata_list
+
+        
+
+
+
+    def InsMetaDict(self, metadata_list):   
         '''
-        write  function that converts a flat list of instrument metadata into a structured dictionary.
+        Converts a flat list of instrument metadata into a structured dictionary.
         Returns:
-            - dict: of all the information contained in the 34118 tag  
-            - and an empty dictionary if parsing fails.  
-     
+            - dict: all information contained in the 34118 tag  
+            - empty dictionary if parsing fails
         '''
-        ...
-    # Open file in write mode and Export SEM Metadata to JSON Format with json.dump
-    def WriteSEMJson(self,file, semdict):
+        if not metadata_list or not isinstance(metadata_list, list):
+            print("No valid metadata list provided.")
+            return {}
+
+        meta_dict = {}
+        for item in metadata_list:
+            if "=" in item:
+                key, value = item.split("=", 1)  # divide solo alla prima '='
+                meta_dict[key.strip()] = value.strip()
+            else:
+                # nel caso la stringa non contenga '='
+                meta_dict[item.strip()] = None
+
+        return meta_dict
+
+
+    def WriteSEMJson(self, file, semdict):
+        """
+        Open file in write mode and export SEM metadata to JSON format
+        """
         with open(file, "w") as semoutfile:
-            json.dump(semdict, semoutfile)
+            json.dump(semdict, semoutfile, indent=4)  # indent per renderlo leggibile
+        print(f"SEM metadata saved to {file}")
         return
